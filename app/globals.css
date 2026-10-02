@@ -1,26 +1,119 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* Tailwind CSS v4 directive; it is not a standard CSS at-rule. */
+/* stylelint-disable-next-line at-rule-no-unknown */
+@theme {
+  /* ========================================
+     PRIMARY RED
+     ======================================== */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+  --color-primary-red-50: #ffedef;
+  --color-primary-red-100: #ffc7cc;
+  --color-primary-red-200: #ffabb4;
+  --color-primary-red-300: #ff8692;
+  --color-primary-red-400: #ff6f7d;
+  --color-primary-red-500: #ff4b5c;
+  --color-primary-red-600: #e84454;
+  --color-primary-red-700: #b53341;
+  --color-primary-red-800: #8c2933;
+  --color-primary-red-900: #6b2027;
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+
+  /* ========================================
+     ACCENT GREEN
+     ======================================== */
+
+  --color-accent-green-50: #eafbf1;
+  --color-accent-green-100: #bff3d4;
+  --color-accent-green-200: #a0e8bf;
+  --color-accent-green-300: #74e6a2;
+  --color-accent-green-400: #59e190;
+  --color-accent-green-500: #30d974;
+  --color-accent-green-600: #2cc66a;
+  --color-accent-green-700: #229a52;
+  --color-accent-green-800: #1a7740;
+  --color-accent-green-900: #145b31;
+
+
+  /* ========================================
+     ACCENT GREY
+     ======================================== */
+
+  --color-accent-grey-50: #fbfbfb;
+  --color-accent-grey-100: #f1f1f1;
+  --color-accent-grey-200: #e9e9e9;
+  --color-accent-grey-300: #e2e2e2;
+  --color-accent-grey-400: #dcdcdc;
+  --color-accent-grey-500: #d3d3d3;
+  --color-accent-grey-600: #c0c0c0;
+  --color-accent-grey-700: #969696;
+  --color-accent-grey-800: #747474;
+  --color-accent-grey-900: #595959;
+
+
+  /* ========================================
+     SECONDARY BLUE
+     ======================================== */
+
+  --color-secondary-blue-50: #f5effc;
+  --color-secondary-blue-100: #e0c7f7;
+  --color-secondary-blue-200: #d1b4f3;
+  --color-secondary-blue-300: #bc92ee;
+  --color-secondary-blue-400: #af7dea;
+  --color-secondary-blue-500: #9b5de5;
+  --color-secondary-blue-600: #8954d0;
+  --color-secondary-blue-700: #6e42a3;
+  --color-secondary-blue-800: #55337e;
+  --color-secondary-blue-900: #412760;
+
+
+  /* ========================================
+     PRIMARY PURPLE
+     ======================================== */
+
+  --color-primary-purple-50: #e8e7e7;
+  --color-primary-purple-100: #b7b5b5;
+  --color-primary-purple-200: #949192;
+  --color-primary-purple-300: #646060;
+  --color-primary-purple-400: #453f41;
+  --color-primary-purple-500: #170f11;
+  --color-primary-purple-600: #150e0f;
+  --color-primary-purple-700: #100b0c;
+  --color-primary-purple-800: #0d0809;
+  --color-primary-purple-900: #0a0607;
+
+
+  /* ========================================
+     FONTS
+     ======================================== */
+
+  --font-sans: "Inter", sans-serif;
+  --font-heading: "Poppins", sans-serif;
+  --font-mono: "Fira Code", monospace;
+
+
+  /* ========================================
+     CUSTOM FONT SIZES
+     ======================================== */
+
+  --text-2xs: 0.625rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+  --text-6xl: 3.75rem;
+  --text-7xl: 4.5rem;
+
+  --text-display-sm: 2rem;
+  --text-display-md: 2.5rem;
+  --text-display-lg: 3.5rem;
+  --text-display-xl: 4rem;
 }

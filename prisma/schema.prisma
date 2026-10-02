@@ -1,0 +1,154 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum TripStatus {
+    DRAFT
+    PLANNING
+    OPEN
+    FULL
+    ONGOING
+    COMPLETED
+    CANCELLED
+}
+
+enum TripVisibility {
+    PUBLIC
+    PRIVATE
+}
+
+enum TripMemberRole {
+    CREATOR
+    GUIDE
+    MEMBER
+}
+
+enum TripMemberStatus {
+    CONFIRMED
+    CANCELLED
+}
+
+// ============================================================
+// 1. USERS
+// ============================================================
+
+model User {
+    id           String  @id @default(uuid()) @db.Uuid
+    name         String  @db.VarChar(100)
+    email        String  @unique @db.VarChar(255)
+    passwordHash String  @map("password_hash")
+    profileImage String? @map("profile_image")
+    bio          String?
+
+    createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+    updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+    // Trips created by this user
+    createdTrips Trip[] @relation("TripCreator")
+
+    // Trips where this user is the guide
+    guidedTrips Trip[] @relation("TripGuide")
+
+    // Trips this user belongs to
+    memberships TripMember[]
+
+    @@map("users")
+}
+
+// ============================================================
+// 2. TRIPS
+// ============================================================
+
+model Trip {
+    id String @id @default(uuid()) @db.Uuid
+
+    // User who created the trip
+    creatorId String @map("creator_id") @db.Uuid
+
+    // Optional tour guide
+    tourGuideId String? @map("tour_guide_id") @db.Uuid
+
+    // Main details
+    title       String  @db.VarChar(150)
+    subtitle    String? @db.VarChar(255)
+    description String?
+
+    // Destination
+    destination String  @db.VarChar(150)
+    country     String? @db.VarChar(100)
+
+    latitude  Decimal? @db.Decimal(9, 6)
+    longitude Decimal? @db.Decimal(9, 6)
+
+    // Meeting point
+    meetingPoint     String?  @map("meeting_point") @db.VarChar(255)
+    meetingLatitude  Decimal? @map("meeting_latitude") @db.Decimal(9, 6)
+    meetingLongitude Decimal? @map("meeting_longitude") @db.Decimal(9, 6)
+
+    // Group capacity
+    groupSize Int @map("group_size")
+
+    // Trip dates
+    startDate    DateTime? @map("start_date") @db.Date
+    endDate      DateTime? @map("end_date") @db.Date
+    joinDeadline DateTime? @map("join_deadline") @db.Date
+
+    // Estimated budget per person
+    budgetPerPerson Decimal? @map("budget_per_person") @db.Decimal(12, 2)
+
+    // Status and visibility
+    status     TripStatus     @default(DRAFT)
+    visibility TripVisibility @default(PUBLIC)
+
+    // Additional flexible settings
+    settings Json @default("{}")
+
+    createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+    updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+    // Relationships
+    creator   User  @relation("TripCreator", fields: [creatorId], references: [id], onDelete: Restrict)
+    tourGuide User? @relation("TripGuide", fields: [tourGuideId], references: [id], onDelete: SetNull)
+
+    members TripMember[]
+
+    @@index([creatorId])
+    @@index([tourGuideId])
+    @@index([status])
+    @@index([visibility])
+    @@index([destination])
+    @@index([startDate])
+    @@map("trips")
+}
+
+// ============================================================
+// 3. TRIP MEMBERS
+// ============================================================
+
+model TripMember {
+    tripId String @map("trip_id") @db.Uuid
+    userId String @map("user_id") @db.Uuid
+
+    role   TripMemberRole   @default(MEMBER)
+    status TripMemberStatus @default(CONFIRMED)
+
+    joinedAt DateTime @default(now()) @map("joined_at") @db.Timestamptz
+
+    // Relationships
+    trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    // A user can have only one membership record per trip
+    @@id([tripId, userId])
+    @@index([userId])
+    @@index([tripId, status])
+    @@map("trip_members")
+}
