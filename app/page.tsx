@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-
+import SignOutButton from "@/components/auth/sign-out-button";
 export default function Home() {
   return (
     <div className="flex flex-col flex-1 items-center justify-center ">
@@ -11,6 +11,8 @@ export default function Home() {
         new destinations and plan their trips with the help of the community.
         <br />
       </div>
+
+      <SignOutButton />
     </div>
   );
 }

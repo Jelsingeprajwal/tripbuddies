@@ -1,41 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthenticatedUserId } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/get-current-user";
 
 // GET /api/users/me
 // Fetch the currently authenticated user's profile
 export async function GET() {
   try {
-    const userId = await getAuthenticatedUserId();
-
-    if (!userId) {
-      return NextResponse.json(
-        { message: "Not authenticated" },
-        { status: 401 },
-      );
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        profileImage: true,
-        bio: true,
-      },
-    });
+    const user = await getCurrentUser();
 
     if (!user) {
-      return NextResponse.json({ message: "User not found" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     return NextResponse.json({ user }, { status: 200 });
   } catch (error) {
-    console.error("Get current user error:", error);
+    console.error("Failed to fetch current user:", error);
 
     return NextResponse.json(
-      { message: "Internal server error" },
+      { error: "Failed to fetch user profile" },
       { status: 500 },
     );
   }
@@ -43,44 +26,32 @@ export async function GET() {
 
 // PATCH /api/users/me
 // Update the currently authenticated user's profile
-export async function PATCH(request: NextRequest) {
+
+export async function PATCH(request: Request) {
   try {
-    const userId = await getAuthenticatedUserId();
+    const user = await getCurrentUser();
 
-    if (!userId) {
-      return NextResponse.json(
-        { message: "Not authenticated" },
-        { status: 401 },
-      );
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    let body: unknown;
+    const body = await request.json();
 
-    try {
-      body = await request.json();
-    } catch {
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
       return NextResponse.json(
-        { message: "Invalid request body" },
-        { status: 400 },
-      );
-    }
-
-    if (typeof body !== "object" || body === null || Array.isArray(body)) {
-      return NextResponse.json(
-        { message: "Request body must be a JSON object" },
+        { error: "Invalid request body" },
         { status: 400 },
       );
     }
 
     const allowedFields = ["name", "bio", "profileImage"];
-    const suppliedFields = Object.keys(body);
+    const unknownFields = Object.keys(body).filter(
+      (key) => !allowedFields.includes(key),
+    );
 
-    if (
-      suppliedFields.length === 0 ||
-      suppliedFields.some((field) => !allowedFields.includes(field))
-    ) {
+    if (unknownFields.length > 0) {
       return NextResponse.json(
-        { message: "Provide valid profile fields to update" },
+        { error: `Unknown fields: ${unknownFields.join(", ")}` },
         { status: 400 },
       );
     }
@@ -92,64 +63,65 @@ export async function PATCH(request: NextRequest) {
     } = {};
 
     if ("name" in body) {
-      const name = body.name;
-
       if (
-        typeof name !== "string" ||
-        !name.trim() ||
-        name.trim().length > 100
+        typeof body.name !== "string" ||
+        body.name.trim().length === 0 ||
+        body.name.trim().length > 100
       ) {
         return NextResponse.json(
-          { message: "Name must be between 1 and 100 characters" },
+          { error: "Name must be between 1 and 100 characters" },
           { status: 400 },
         );
       }
 
-      data.name = name.trim();
+      data.name = body.name.trim();
     }
 
     if ("bio" in body) {
-      const bio = body.bio;
-
-      if (bio !== null && (typeof bio !== "string" || bio.length > 500)) {
+      if (
+        body.bio !== null &&
+        (typeof body.bio !== "string" || body.bio.length > 500)
+      ) {
         return NextResponse.json(
-          {
-            message: "Bio must be a string of at most 500 characters or null",
-          },
+          { error: "Bio must be a string of at most 500 characters or null" },
           { status: 400 },
         );
       }
 
-      data.bio = bio;
+      data.bio = body.bio;
     }
 
     if ("profileImage" in body) {
-      const profileImage = body.profileImage;
-
       if (
-        profileImage !== null &&
-        (typeof profileImage !== "string" ||
-          !profileImage.trim() ||
-          profileImage.length > 2048)
+        body.profileImage !== null &&
+        (typeof body.profileImage !== "string" ||
+          body.profileImage.length > 2048)
       ) {
         return NextResponse.json(
           {
-            message:
-              "Profile image must be a non-empty string of at most 2048 characters or null",
+            error:
+              "Profile image must be a string of at most 2048 characters or null",
           },
           { status: 400 },
         );
       }
 
-      data.profileImage =
-        typeof profileImage === "string" ? profileImage.trim() : profileImage;
+      data.profileImage = body.profileImage;
     }
 
-    const user = await prisma.user.update({
-      where: { id: userId },
+    if (Object.keys(data).length === 0) {
+      return NextResponse.json(
+        { error: "Provide at least one field to update" },
+        { status: 400 },
+      );
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
       data,
       select: {
         id: true,
+        clerkUserId: true,
         name: true,
         email: true,
         profileImage: true,
@@ -157,18 +129,12 @@ export async function PATCH(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(
-      {
-        message: "Profile updated successfully",
-        user,
-      },
-      { status: 200 },
-    );
+    return NextResponse.json({ user: updatedUser }, { status: 200 });
   } catch (error) {
-    console.error("Update profile error:", error);
+    console.error("Failed to update user profile:", error);
 
     return NextResponse.json(
-      { message: "Internal server error" },
+      { error: "Failed to update user profile" },
       { status: 500 },
     );
   }
